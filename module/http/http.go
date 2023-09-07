@@ -2,6 +2,7 @@ package webserver
 
 import (
 	"context"
+	"github.com/WindBlog/module/http/api"
 	"github.com/gin-gonic/gin"
 	"github.com/wonderivan/logger"
 	"net/http"
@@ -36,6 +37,8 @@ func (w *Webserver) Init(address string) error {
 		logger.Info("test /")
 		c.JSON(200, "")
 	})
+	api.SetRouterGroup(r)
+
 	var err error
 
 	go func() {
