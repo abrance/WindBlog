@@ -2,18 +2,16 @@ package doc
 
 import (
 	"github.com/WindBlog/util/errors"
+	"github.com/WindBlog/util/storage/file"
 	"github.com/WindBlog/util/storage/json_storage"
+	"github.com/coreos/etcd/pkg/fileutil"
 	"github.com/gin-gonic/gin"
 	"github.com/wonderivan/logger"
-	"net/http"
+	"strings"
 	"time"
 )
 
-// Response
-// Json 响应基类
-type Response struct {
-	Data any
-}
+var ()
 
 func GetHandler(ctx *gin.Context) {
 	id := ctx.Param("id")
@@ -34,6 +32,16 @@ func ListHandler(ctx *gin.Context) {
 	ctx.JSON(200, f)
 }
 
+func UrlHandler(ctx *gin.Context) {
+	url := ctx.Param("url")
+	if strings.HasPrefix(url, file.FileUrlPrefix) {
+		filePath := strings.Replace(url, file.FileUrlPrefix, "", 1)
+		realPath := file.GetRealPath(filePath)
+		fileutil.Exist(realPath)
+		ctx.File(realPath)
+	}
+}
+
 type AddFileRequest struct {
 	Name      string `json:"name" binding:"required"`
 	Url       string `json:"url"`        // 地址, file://  表示本地
@@ -48,26 +56,6 @@ type AddFileRequest struct {
 //	ArchiveId  string //归档id
 //	CreateTime timestamp.Timestamp
 //	UpdateTime timestamp.Timestamp
-
-type ResponseData struct {
-	Msg  string      `json:"message"`
-	Code int         `json:"code"`
-	Data interface{} `json:"data"`
-}
-
-func Responses(ctx *gin.Context, code int, msg string, data interface{}) {
-	resp := ResponseData{
-		Code: code,
-		Data: data,
-	}
-	if msg != "" {
-		resp.Msg = msg
-	} else {
-		resp.Msg = "error format"
-	}
-
-	ctx.JSON(http.StatusOK, resp)
-}
 
 func AddHandler(ctx *gin.Context) {
 	req := AddFileRequest{}

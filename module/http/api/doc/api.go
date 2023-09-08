@@ -10,7 +10,9 @@ func SetDocRouterGroup(router *gin.RouterGroup) {
 	{
 		v1DocRouterGroup.GET("/get/:id", GetHandler)
 		v1DocRouterGroup.GET("/list", ListHandler)
-		v1DocRouterGroup.POST("/add/:id", AddHandler)
+		v1DocRouterGroup.GET("/:url", UrlHandler)
+
+		v1DocRouterGroup.POST("/add", AddHandler)
 		v1DocRouterGroup.PUT("/update/meta/:id", UpdateMetaHandler)
 		v1DocRouterGroup.PATCH("/update/content/:id", UpdateContentHandler)
 		v1DocRouterGroup.DELETE("/remove/:id", RemoveHandler)

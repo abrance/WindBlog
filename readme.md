@@ -62,3 +62,19 @@
 ##### tag-文档信息存储
 
     保存于 data.json 中的 tagDocBinding
+
+### 程序部署目录结构
+
+~~~
+- WindBlog
+  - bin(程序目录)
+    - db (使用 json 的文件存储)
+      - some db file
+      - some db file ... 
+    - config.ini (配置文件)
+    - log (日志)
+    - log.json (日志配置文件)
+    - server (程序二进制)
+    - doc (文档存储目录)
+      - md (markdown 文档存储目录)
+~~~
