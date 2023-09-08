@@ -2,16 +2,20 @@ package json_storage
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/WindBlog/util/errors"
+	"github.com/coreos/etcd/pkg/idutil"
 	"github.com/dgraph-io/badger/v3"
 	"github.com/wonderivan/logger"
 	"strings"
+	"time"
 )
 
 // FileTable
 // 建立 file 表, 采用关系型数据库的写法
 type FileTable struct {
 	name string
+	gen  *idutil.Generator
 }
 
 // File
@@ -26,21 +30,30 @@ type File struct {
 	UpdateTime int64
 }
 
-func (t *FileTable) getDBEngine() *badger.DB {
+func (f *FileTable) Init() {
+	f.SetTableName("file")
+	f.gen = idutil.NewGenerator(0, time.Now())
+}
+
+func (f *FileTable) getNextId() string {
+	return fmt.Sprintf("%d", f.gen.Next())
+}
+
+func (f *FileTable) getDBEngine() *badger.DB {
 	return db
 }
 
-func (t *FileTable) SetTableName(name string) *FileTable {
-	t.name = name
-	return t
+func (f *FileTable) SetTableName(name string) *FileTable {
+	f.name = name
+	return f
 }
 
-func (t *FileTable) Get(id string) (*FileTable, error) {
+func (f *FileTable) Get(id string) (*File, error) {
 	// 这里假设 obj 是 map[string]string 类型, 实际上可以为任意 go 结构体对象
-	var objValue *FileTable
-	err := t.getDBEngine().View(func(txn *badger.Txn) error {
+	var objValue *File
+	err := f.getDBEngine().View(func(txn *badger.Txn) error {
 		var err error
-		item, err := txn.Get([]byte(strings.Join([]string{t.name, id}, ":")))
+		item, err := txn.Get([]byte(strings.Join([]string{f.name, id}, ":")))
 		if err != nil {
 			logger.Error(errors.JsonDBError)
 			return err
@@ -63,18 +76,18 @@ func (t *FileTable) Get(id string) (*FileTable, error) {
 	return objValue, nil
 }
 
-func (t *FileTable) List(filter *FilterOption) (map[string]*File, error) {
+func (f *FileTable) List(filter *FilterOption) (map[string]*File, error) {
 	mapObjValue := make(map[string]*File)
-	err := t.getDBEngine().View(func(txn *badger.Txn) error {
+	err := f.getDBEngine().View(func(txn *badger.Txn) error {
 		//var err error
 		iter := txn.NewIterator(badger.DefaultIteratorOptions)
 		defer iter.Close()
 		prefix := make([]byte, 0)
 		if filter != nil {
 			// todo 判断有问题
-			prefix = []byte(strings.Join([]string{t.name, filter.NameFilterOption.Like}, ":"))
+			prefix = []byte(strings.Join([]string{f.name, filter.NameFilterOption.Like}, ":"))
 		} else {
-			prefix = []byte(t.name + ":")
+			prefix = []byte(f.name + ":")
 		}
 
 		for iter.Seek(prefix); iter.ValidForPrefix(prefix); iter.Next() {
@@ -101,30 +114,32 @@ func (t *FileTable) List(filter *FilterOption) (map[string]*File, error) {
 	return mapObjValue, nil
 }
 
-func (t *FileTable) Insert(id string, fieldObj *File) error {
-	return t.getDBEngine().Update(func(txn *badger.Txn) error {
+func (f *FileTable) Insert(fieldObj *File) error {
+	id := f.getNextId()
+	fieldObj.Id = id
+	return f.getDBEngine().Update(func(txn *badger.Txn) error {
 		encoded, err := json.Marshal(*fieldObj)
 		if err != nil {
 			logger.Error(errors.JsonInsertError)
 			return err
 		}
-		return txn.Set([]byte(strings.Join([]string{t.name, id}, ":")), encoded)
+		return txn.Set([]byte(strings.Join([]string{f.name, id}, ":")), encoded)
 	})
 }
 
-func (t *FileTable) Update(id string, NewFieldObj *FileTable) error {
-	return t.getDBEngine().Update(func(txn *badger.Txn) error {
+func (f *FileTable) Update(id string, NewFieldObj *File) error {
+	return f.getDBEngine().Update(func(txn *badger.Txn) error {
 		encoded, err := json.Marshal(NewFieldObj)
 		if err != nil {
 			logger.Error(errors.JsonInsertError)
 			return err
 		}
-		return txn.Set([]byte(strings.Join([]string{t.name, id}, ":")), encoded)
+		return txn.Set([]byte(strings.Join([]string{f.name, id}, ":")), encoded)
 	})
 }
 
-func (t *FileTable) Delete(id string) error {
-	return t.getDBEngine().Update(func(txn *badger.Txn) error {
-		return txn.Delete([]byte(strings.Join([]string{t.name, id}, ":")))
+func (f *FileTable) Delete(id string) error {
+	return f.getDBEngine().Update(func(txn *badger.Txn) error {
+		return txn.Delete([]byte(strings.Join([]string{f.name, id}, ":")))
 	})
 }

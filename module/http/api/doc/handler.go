@@ -85,7 +85,7 @@ func AddHandler(ctx *gin.Context) {
 		CreateTime: time.Now().Unix(),
 		UpdateTime: time.Now().Unix(),
 	}
-	err = json_storage.GetFileTable().Insert("1", f)
+	err = json_storage.GetFileTable().Insert(f)
 	if err != nil {
 		logger.Error(err)
 		return

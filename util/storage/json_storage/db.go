@@ -23,7 +23,7 @@ func Init() {
 
 	// init file table
 	fileTable = &FileTable{}
-	fileTable.SetTableName("file")
+	fileTable.Init()
 }
 
 func GetFileTable() *FileTable {
