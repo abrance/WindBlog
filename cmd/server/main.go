@@ -2,6 +2,8 @@ package main
 
 import (
 	webserver "github.com/WindBlog/module/http"
+	"github.com/WindBlog/util/log"
+	"github.com/WindBlog/util/storage/json_storage"
 	"github.com/wonderivan/logger"
 	"os"
 	"os/signal"
@@ -9,6 +11,8 @@ import (
 )
 
 func main() {
+	log.Init()
+	json_storage.Init()
 	err := webserver.InitDefaultWebserver()
 	if err != nil {
 		logger.Fatal(err)

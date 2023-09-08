@@ -1,4 +1,4 @@
-package json
+package json_storage
 
 import (
 	"encoding/json"
@@ -8,27 +8,39 @@ import (
 	"strings"
 )
 
-// 定义表时要像 Table 一样定一个结构体和方法
-
-type Table struct {
+// FileTable
+// 建立 file 表, 采用关系型数据库的写法
+type FileTable struct {
 	name string
 }
 
-func (t *Table) getDBEngine() *badger.DB {
+// File
+// 定义字段
+type File struct {
+	Id         string // unique key, 数字整型
+	Name       string // 书名
+	Url        string // 地址, file://  表示本地
+	IsArchive  bool   // 是否已归档
+	ArchiveId  string //归档id
+	CreateTime int64
+	UpdateTime int64
+}
+
+func (t *FileTable) getDBEngine() *badger.DB {
 	return db
 }
 
-func (t *Table) SetTableName(name string) *Table {
+func (t *FileTable) SetTableName(name string) *FileTable {
 	t.name = name
 	return t
 }
 
-func (t *Table) Get(id string) (TemplateStruct, error) {
+func (t *FileTable) Get(id string) (*FileTable, error) {
 	// 这里假设 obj 是 map[string]string 类型, 实际上可以为任意 go 结构体对象
-	var objValue TemplateStruct
+	var objValue *FileTable
 	err := t.getDBEngine().View(func(txn *badger.Txn) error {
 		var err error
-		item, err := txn.Get([]byte(t.name + id))
+		item, err := txn.Get([]byte(strings.Join([]string{t.name, id}, ":")))
 		if err != nil {
 			logger.Error(errors.JsonDBError)
 			return err
@@ -38,7 +50,7 @@ func (t *Table) Get(id string) (TemplateStruct, error) {
 			logger.Error(errors.JsonDBError)
 			return err
 		}
-		err = json.Unmarshal(value, &objValue)
+		err = json.Unmarshal(value, objValue)
 		if err != nil {
 			logger.Error(errors.JsonDBError)
 			return err
@@ -51,25 +63,13 @@ func (t *Table) Get(id string) (TemplateStruct, error) {
 	return objValue, nil
 }
 
-type LikeOption struct {
-	Like string
-}
-
-type FilterOption struct {
-	NameFilterOption LikeOption
-}
-
-type TemplateStruct struct {
-	TemplateField string
-}
-
-func (t *Table) List(filter *FilterOption) (map[string]TemplateStruct, error) {
-	var mapObjValue map[string]TemplateStruct
+func (t *FileTable) List(filter *FilterOption) (map[string]*File, error) {
+	mapObjValue := make(map[string]*File)
 	err := t.getDBEngine().View(func(txn *badger.Txn) error {
-		var err error
+		//var err error
 		iter := txn.NewIterator(badger.DefaultIteratorOptions)
 		defer iter.Close()
-		var prefix []byte
+		prefix := make([]byte, 0)
 		if filter != nil {
 			// todo 判断有问题
 			prefix = []byte(strings.Join([]string{t.name, filter.NameFilterOption.Like}, ":"))
@@ -78,10 +78,9 @@ func (t *Table) List(filter *FilterOption) (map[string]TemplateStruct, error) {
 		}
 
 		for iter.Seek(prefix); iter.ValidForPrefix(prefix); iter.Next() {
-			var objValue TemplateStruct
-			var encoded []byte
+			var objValue File
 			key := string(iter.Item().Key())
-			_, err = iter.Item().ValueCopy(encoded)
+			encoded, err := iter.Item().ValueCopy(nil)
 			if err != nil {
 				logger.Error(errors.JsonDBError, err)
 				continue
@@ -89,8 +88,9 @@ func (t *Table) List(filter *FilterOption) (map[string]TemplateStruct, error) {
 			err = json.Unmarshal(encoded, &objValue)
 			if err != nil {
 				logger.Error(errors.JsonDBError, err)
+				continue
 			}
-			mapObjValue[key] = objValue
+			mapObjValue[key] = &objValue
 		}
 		return nil
 	})
@@ -101,9 +101,9 @@ func (t *Table) List(filter *FilterOption) (map[string]TemplateStruct, error) {
 	return mapObjValue, nil
 }
 
-func (t *Table) Insert(id string, fieldObj TemplateStruct) error {
+func (t *FileTable) Insert(id string, fieldObj *File) error {
 	return t.getDBEngine().Update(func(txn *badger.Txn) error {
-		encoded, err := json.Marshal(fieldObj)
+		encoded, err := json.Marshal(*fieldObj)
 		if err != nil {
 			logger.Error(errors.JsonInsertError)
 			return err
@@ -112,7 +112,7 @@ func (t *Table) Insert(id string, fieldObj TemplateStruct) error {
 	})
 }
 
-func (t *Table) Update(id string, NewFieldObj TemplateStruct) error {
+func (t *FileTable) Update(id string, NewFieldObj *FileTable) error {
 	return t.getDBEngine().Update(func(txn *badger.Txn) error {
 		encoded, err := json.Marshal(NewFieldObj)
 		if err != nil {
@@ -123,7 +123,7 @@ func (t *Table) Update(id string, NewFieldObj TemplateStruct) error {
 	})
 }
 
-func (t *Table) Delete(id string) error {
+func (t *FileTable) Delete(id string) error {
 	return t.getDBEngine().Update(func(txn *badger.Txn) error {
 		return txn.Delete([]byte(strings.Join([]string{t.name, id}, ":")))
 	})

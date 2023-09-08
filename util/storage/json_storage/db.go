@@ -1,4 +1,4 @@
-package json
+package json_storage
 
 import (
 	"github.com/WindBlog/util/errors"
@@ -12,7 +12,7 @@ var (
 	fileTable *FileTable
 )
 
-func init() {
+func Init() {
 	var err error
 	opt := badger.DefaultOptions("./db")
 	db, err = badger.Open(opt)
@@ -20,7 +20,6 @@ func init() {
 		logger.Fatal(errors.JsonDBInitError)
 		os.Exit(errors.JsonDBInitError)
 	}
-	defer db.Close()
 
 	// init file table
 	fileTable = &FileTable{}

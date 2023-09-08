@@ -18,4 +18,4 @@ test-run:
 	@mkdir -p build/WindBlog/bin
 	@go build -o build/WindBlog/bin/server ./cmd/server
 	@cp util/log/log.json ./config.ini build/WindBlog/bin/
-	cd build/WindBlog/bin && bash -c ./server
+	cd build/WindBlog/bin > ./log && bash -c ./server

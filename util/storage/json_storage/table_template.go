@@ -1,42 +1,29 @@
-package json
+package json_storage
 
 import (
 	"encoding/json"
 	"github.com/WindBlog/util/errors"
 	"github.com/dgraph-io/badger/v3"
-	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/wonderivan/logger"
 	"strings"
 )
 
-// FileTable
-// 建立 file 表, 采用关系型数据库的写法
-type FileTable struct {
+// 定义表时要像 Table 一样定一个结构体和方法
+
+type Table struct {
 	name string
 }
 
-// File
-// 定义字段
-type File struct {
-	Id         string // unique key, 数字整型
-	Name       string // 书名
-	Url        string // 地址, file://  表示本地
-	IsArchive  bool   // 是否已归档
-	ArchiveId  string //归档id
-	CreateTime timestamp.Timestamp
-	UpdateTime timestamp.Timestamp
-}
-
-func (t *FileTable) getDBEngine() *badger.DB {
+func (t *Table) getDBEngine() *badger.DB {
 	return db
 }
 
-func (t *FileTable) SetTableName(name string) *FileTable {
+func (t *Table) SetTableName(name string) *Table {
 	t.name = name
 	return t
 }
 
-func (t *FileTable) Get(id string) (TemplateStruct, error) {
+func (t *Table) Get(id string) (TemplateStruct, error) {
 	// 这里假设 obj 是 map[string]string 类型, 实际上可以为任意 go 结构体对象
 	var objValue TemplateStruct
 	err := t.getDBEngine().View(func(txn *badger.Txn) error {
@@ -64,7 +51,19 @@ func (t *FileTable) Get(id string) (TemplateStruct, error) {
 	return objValue, nil
 }
 
-func (t *FileTable) List(filter *FilterOption) (map[string]TemplateStruct, error) {
+type LikeOption struct {
+	Like string
+}
+
+type FilterOption struct {
+	NameFilterOption LikeOption
+}
+
+type TemplateStruct struct {
+	TemplateField string
+}
+
+func (t *Table) List(filter *FilterOption) (map[string]TemplateStruct, error) {
 	var mapObjValue map[string]TemplateStruct
 	err := t.getDBEngine().View(func(txn *badger.Txn) error {
 		var err error
@@ -102,7 +101,7 @@ func (t *FileTable) List(filter *FilterOption) (map[string]TemplateStruct, error
 	return mapObjValue, nil
 }
 
-func (t *FileTable) Insert(id string, fieldObj TemplateStruct) error {
+func (t *Table) Insert(id string, fieldObj TemplateStruct) error {
 	return t.getDBEngine().Update(func(txn *badger.Txn) error {
 		encoded, err := json.Marshal(fieldObj)
 		if err != nil {
@@ -113,7 +112,7 @@ func (t *FileTable) Insert(id string, fieldObj TemplateStruct) error {
 	})
 }
 
-func (t *FileTable) Update(id string, NewFieldObj TemplateStruct) error {
+func (t *Table) Update(id string, NewFieldObj TemplateStruct) error {
 	return t.getDBEngine().Update(func(txn *badger.Txn) error {
 		encoded, err := json.Marshal(NewFieldObj)
 		if err != nil {
@@ -124,7 +123,7 @@ func (t *FileTable) Update(id string, NewFieldObj TemplateStruct) error {
 	})
 }
 
-func (t *FileTable) Delete(id string) error {
+func (t *Table) Delete(id string) error {
 	return t.getDBEngine().Update(func(txn *badger.Txn) error {
 		return txn.Delete([]byte(strings.Join([]string{t.name, id}, ":")))
 	})
