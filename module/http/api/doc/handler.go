@@ -33,7 +33,8 @@ func ListHandler(ctx *gin.Context) {
 }
 
 func UrlHandler(ctx *gin.Context) {
-	url := ctx.Param("url")
+	url := ctx.Query("url")
+	// 根据不同的前缀去不同的地方找文件, file: 表示本地 ,后面的是文件相对路径
 	if strings.HasPrefix(url, file.FileUrlPrefix) {
 		filePath := strings.Replace(url, file.FileUrlPrefix, "", 1)
 		realPath := file.GetRealPath(filePath)
