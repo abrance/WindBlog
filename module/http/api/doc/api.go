@@ -11,10 +11,10 @@ func SetDocRouterGroup(router *gin.RouterGroup) {
 		v1DocRouterGroup.GET("/get/:id", GetHandler)
 		v1DocRouterGroup.GET("/list", ListHandler)
 		v1DocRouterGroup.GET("/url", UrlHandler)
-		// 暂时不提供删除文档的接口
 
 		v1DocRouterGroup.POST("/add", AddHandler)
 		v1DocRouterGroup.POST("/upload", UploadHandler)
+
 		v1DocRouterGroup.PUT("/update/meta/:id", UpdateMetaHandler)
 		v1DocRouterGroup.PATCH("/update/content/:id", UpdateContentHandler)
 		v1DocRouterGroup.DELETE("/remove/:id", RemoveHandler)
