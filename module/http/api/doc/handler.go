@@ -103,7 +103,7 @@ func UploadHandler(ctx *gin.Context) {
 		logger.Error(err)
 		return
 	}
-	http.Responses(ctx, 200, "", "get")
+	http.Responses(ctx, 200, "", nil)
 }
 
 func UpdateMetaHandler(ctx *gin.Context) {

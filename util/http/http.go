@@ -18,6 +18,11 @@ type ResponseData struct {
 }
 
 func Responses(ctx *gin.Context, code int, msg string, data interface{}) {
+	// 优化此段代码
+	if data == nil {
+		data = ""
+	}
+
 	resp := ResponseData{
 		Code: code,
 		Data: data,
