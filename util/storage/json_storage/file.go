@@ -50,7 +50,9 @@ func (f *FileTable) SetTableName(name string) *FileTable {
 
 func (f *FileTable) Get(id string) (*File, error) {
 	// 这里假设 obj 是 map[string]string 类型, 实际上可以为任意 go 结构体对象
-	var objValue *File
+	var objValue File
+
+	logger.Info(id)
 	err := f.getDBEngine().View(func(txn *badger.Txn) error {
 		var err error
 		item, err := txn.Get([]byte(strings.Join([]string{f.name, id}, ":")))
@@ -63,7 +65,7 @@ func (f *FileTable) Get(id string) (*File, error) {
 			logger.Error(errors.JsonDBError)
 			return err
 		}
-		err = json.Unmarshal(value, objValue)
+		err = json.Unmarshal(value, &objValue)
 		if err != nil {
 			logger.Error(errors.JsonDBError)
 			return err
@@ -71,9 +73,9 @@ func (f *FileTable) Get(id string) (*File, error) {
 		return nil
 	})
 	if err != nil {
-		return objValue, err
+		return &objValue, err
 	}
-	return objValue, nil
+	return &objValue, nil
 }
 
 func (f *FileTable) List(filter *FilterOption) (map[string]*File, error) {

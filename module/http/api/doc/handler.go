@@ -20,7 +20,7 @@ func GetHandler(ctx *gin.Context) {
 		logger.Error(err)
 	}
 	//ctx.File()
-	ctx.JSON(200, *f)
+	ctx.JSON(200, f)
 }
 
 func ListHandler(ctx *gin.Context) {
