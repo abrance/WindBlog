@@ -25,7 +25,7 @@ func Responses(ctx *gin.Context, code int, msg string, data interface{}) {
 	if msg != "" {
 		resp.Msg = msg
 	} else {
-		resp.Msg = "error format"
+		resp.Msg = "ok"
 	}
 
 	ctx.JSON(http.StatusOK, resp)

@@ -14,6 +14,7 @@ func SetDocRouterGroup(router *gin.RouterGroup) {
 		// 暂时不提供删除文档的接口
 
 		v1DocRouterGroup.POST("/add", AddHandler)
+		v1DocRouterGroup.POST("/upload", UploadHandler)
 		v1DocRouterGroup.PUT("/update/meta/:id", UpdateMetaHandler)
 		v1DocRouterGroup.PATCH("/update/content/:id", UpdateContentHandler)
 		v1DocRouterGroup.DELETE("/remove/:id", RemoveHandler)

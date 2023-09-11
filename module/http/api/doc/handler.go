@@ -2,6 +2,7 @@ package doc
 
 import (
 	"github.com/WindBlog/util/errors"
+	"github.com/WindBlog/util/http"
 	"github.com/WindBlog/util/storage/file"
 	"github.com/WindBlog/util/storage/json_storage"
 	"github.com/coreos/etcd/pkg/fileutil"
@@ -80,7 +81,29 @@ func AddHandler(ctx *gin.Context) {
 		return
 	}
 	logger.Info("req: %v", req)
-	ctx.JSON(200, "get")
+	http.Responses(ctx, 200, "", nil)
+}
+
+func UploadHandler(ctx *gin.Context) {
+	// curl 组织该 post 请求
+
+	_file, err := ctx.FormFile("doc")
+	if err != nil {
+		logger.Error(errors.ValidationException, err)
+		return
+	}
+	// 限制文件大小
+	if _file.Size > 1024*1024*10 {
+		logger.Error(errors.ValidationException)
+		return
+	}
+	// 将文件保存到本地
+	err = ctx.SaveUploadedFile(_file, file.GetRealPath(_file.Filename))
+	if err != nil {
+		logger.Error(err)
+		return
+	}
+	http.Responses(ctx, 200, "", "get")
 }
 
 func UpdateMetaHandler(ctx *gin.Context) {
