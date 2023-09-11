@@ -8,6 +8,7 @@ import (
 	"github.com/coreos/etcd/pkg/fileutil"
 	"github.com/gin-gonic/gin"
 	"github.com/wonderivan/logger"
+	"os"
 	"strings"
 	"time"
 )
@@ -116,4 +117,30 @@ func UpdateContentHandler(ctx *gin.Context) {
 
 func RemoveHandler(ctx *gin.Context) {
 	ctx.JSON(200, "get")
+}
+
+func RemoveUrlHandler(ctx *gin.Context) {
+	url := ctx.Query("url")
+	// 组织一个 curl 请求这个接口
+	// curl -X DELETE "http://localhost:8080/doc/v1/remove_url/?url=file:test.txt"
+
+	// 根据不同的前缀去不同的地方找文件, file: 表示本地 ,后面的是文件相对路径
+	if strings.HasPrefix(url, file.FileUrlPrefix) {
+		logger.Info(url)
+		filePath := strings.Replace(url, file.FileUrlPrefix, "", 1)
+		realPath := file.GetRealPath(filePath)
+		logger.Info(realPath)
+		if fileutil.Exist(realPath) {
+			// 删除文件
+			err := os.Remove(realPath)
+			if err != nil {
+				logger.Error(err)
+				return
+			}
+		} else {
+			logger.Error(errors.FileNotExistError)
+			return
+		}
+	}
+	http.Responses(ctx, 200, "", nil)
 }

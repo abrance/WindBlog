@@ -18,5 +18,6 @@ func SetDocRouterGroup(router *gin.RouterGroup) {
 		v1DocRouterGroup.PUT("/update/meta/:id", UpdateMetaHandler)
 		v1DocRouterGroup.PATCH("/update/content/:id", UpdateContentHandler)
 		v1DocRouterGroup.DELETE("/remove/:id", RemoveHandler)
+		v1DocRouterGroup.DELETE("/remove_url/", RemoveUrlHandler)
 	}
 }

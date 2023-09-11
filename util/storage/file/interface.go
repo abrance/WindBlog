@@ -7,7 +7,7 @@ import (
 )
 
 func GetRealPath(path string) string {
-	return fmt.Sprintf("%s/%s", FileStoragePrefix, path)
+	return fmt.Sprintf("%s/doc/%s", FileStoragePrefix, path)
 }
 
 func Init() {
