@@ -11,10 +11,12 @@ var Msg = map[int]string{
 
 	MiddlewareException: "中间件异常",
 
+	ApiTodoException:  "API 待完成异常",
 	ApiAboveException: "API 异常",
 
 	// 通用异常
 	FileNotExistError: "文件不存在",
+	FileDeleteError:   "文件删除异常",
 	FileStorageError:  "文件存储异常",
 
 	JsonInsertError: "JSON 插入异常",

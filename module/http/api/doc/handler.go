@@ -13,8 +13,6 @@ import (
 	"time"
 )
 
-var ()
-
 func GetHandler(ctx *gin.Context) {
 	id := ctx.Param("id")
 	f, err := json_storage.GetFileTable().Get(id)
@@ -73,7 +71,7 @@ func AddHandler(ctx *gin.Context) {
 
 func UploadHandler(ctx *gin.Context) {
 	// curl 组织该 post 请求
-
+	// curl http://localhost:5000/api/doc/v1/list -v
 	_file, err := ctx.FormFile("doc")
 	if err != nil {
 		logger.Error(errors.ValidationException, err)
@@ -90,10 +88,12 @@ func UploadHandler(ctx *gin.Context) {
 		logger.Error(err)
 		return
 	}
-	http.Responses(ctx, 200, nil)
+	http.Responses(ctx, errors.OK, nil)
 }
 
 func UpdateMetaHandler(ctx *gin.Context) {
+	// curl -X PUT "http://localhost:5000/api/doc/v1/update_meta/?id=152227692589057" -d '{"name":"test"}'
+	id := ctx.Param("id")
 	req := &UpdateFileMetaRequest{
 		UpdateTime: time.Now().Unix(),
 	}
@@ -103,15 +103,38 @@ func UpdateMetaHandler(ctx *gin.Context) {
 		http.Responses(ctx, errors.ValidationException, nil)
 		return
 	}
-	ctx.JSON(200, "get")
+	oldFile, err := json_storage.GetFileTable().Get(id)
+	if err != nil {
+		logger.Error(errors.FileNotExistError)
+		return
+	}
+	f := &json_storage.File{
+		Id:         id,
+		Name:       req.Name,
+		Url:        req.Url,
+		IsArchive:  req.IsArchive,
+		ArchiveId:  req.ArchiveId,
+		CreateTime: oldFile.CreateTime,
+		UpdateTime: req.UpdateTime,
+	}
+	err = json_storage.GetFileTable().Update(id, f)
+	http.Responses(ctx, errors.OK, nil)
 }
 
 func UpdateContentHandler(ctx *gin.Context) {
-	ctx.JSON(200, "get")
+	// curl -X PATCH "http://localhost:5000/api/doc/v1/update/content/152227692589057" -d '{"name":"test"}'
+	http.Responses(ctx, errors.ApiTodoException, "")
 }
 
 func RemoveHandler(ctx *gin.Context) {
-	ctx.JSON(200, "get")
+	id := ctx.Param("id")
+	err := json_storage.GetFileTable().Delete(id)
+	if err != nil {
+		logger.Error(err)
+		http.Responses(ctx, errors.FileDeleteError, nil)
+		return
+	}
+	http.Responses(ctx, errors.OK, id)
 }
 
 func RemoveUrlHandler(ctx *gin.Context) {

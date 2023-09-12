@@ -21,4 +21,3 @@ type UpdateFileMetaRequest struct {
 //	IsArchive  bool   // 是否已归档
 //	ArchiveId  string //归档id
 //	CreateTime timestamp.Timestamp
-//	UpdateTime timestamp.Timestamp

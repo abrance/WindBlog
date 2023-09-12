@@ -10,5 +10,7 @@ const (
 
 	MiddlewareException = 1100
 
+	ApiTodoException = 1002
+
 	ApiAboveException = 1000
 )

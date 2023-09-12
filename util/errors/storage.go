@@ -1,6 +1,7 @@
 package errors
 
 const (
+	FileDeleteError   = 2220
 	FileNotExistError = 2210
 	FileStorageError  = 2200
 
