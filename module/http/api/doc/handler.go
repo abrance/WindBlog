@@ -22,7 +22,7 @@ func GetHandler(ctx *gin.Context) {
 		logger.Error(err)
 	}
 	//ctx.File()
-	ctx.JSON(200, f)
+	ctx.JSON(errors.OK, f)
 }
 
 func ListHandler(ctx *gin.Context) {
@@ -30,8 +30,7 @@ func ListHandler(ctx *gin.Context) {
 	if err != nil {
 		logger.Error(err)
 	}
-	//ctx.File()
-	ctx.JSON(200, f)
+	http.Responses(ctx, errors.OK, f)
 }
 
 func UrlHandler(ctx *gin.Context) {
@@ -42,23 +41,10 @@ func UrlHandler(ctx *gin.Context) {
 		realPath := file.GetRealPath(filePath)
 		fileutil.Exist(realPath)
 		ctx.File(realPath)
+	} else {
+		http.Responses(ctx, errors.FileNotExistError, nil)
 	}
 }
-
-type AddFileRequest struct {
-	Name      string `json:"name" binding:"required"`
-	Url       string `json:"url"`        // 地址, file://  表示本地
-	IsArchive bool   `json:"is_archive"` // 是否已归档
-	ArchiveId string `json:"archive_id"` //归档id
-}
-
-// 	Id         string // unique key, 数字整型
-//	Name       string // 书名
-//	Url        string // 地址, file://  表示本地
-//	IsArchive  bool   // 是否已归档
-//	ArchiveId  string //归档id
-//	CreateTime timestamp.Timestamp
-//	UpdateTime timestamp.Timestamp
 
 func AddHandler(ctx *gin.Context) {
 	req := AddFileRequest{}
@@ -82,7 +68,7 @@ func AddHandler(ctx *gin.Context) {
 		return
 	}
 	logger.Info("req: %v", req)
-	http.Responses(ctx, 200, "", nil)
+	http.Responses(ctx, errors.OK, nil)
 }
 
 func UploadHandler(ctx *gin.Context) {
@@ -104,10 +90,19 @@ func UploadHandler(ctx *gin.Context) {
 		logger.Error(err)
 		return
 	}
-	http.Responses(ctx, 200, "", nil)
+	http.Responses(ctx, 200, nil)
 }
 
 func UpdateMetaHandler(ctx *gin.Context) {
+	req := &UpdateFileMetaRequest{
+		UpdateTime: time.Now().Unix(),
+	}
+	err := ctx.ShouldBindJSON(req)
+	if err != nil {
+		logger.Error(errors.ValidationException)
+		http.Responses(ctx, errors.ValidationException, nil)
+		return
+	}
 	ctx.JSON(200, "get")
 }
 
@@ -142,5 +137,5 @@ func RemoveUrlHandler(ctx *gin.Context) {
 			return
 		}
 	}
-	http.Responses(ctx, 200, "", nil)
+	http.Responses(ctx, 200, nil)
 }

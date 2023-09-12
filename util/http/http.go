@@ -1,6 +1,7 @@
 package http
 
 import (
+	"github.com/WindBlog/util/errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -17,7 +18,7 @@ type ResponseData struct {
 	Data interface{} `json:"data"`
 }
 
-func Responses(ctx *gin.Context, code int, msg string, data interface{}) {
+func Responses(ctx *gin.Context, code int, data interface{}) {
 	// 优化此段代码
 	if data == nil {
 		data = ""
@@ -27,11 +28,8 @@ func Responses(ctx *gin.Context, code int, msg string, data interface{}) {
 		Code: code,
 		Data: data,
 	}
-	if msg != "" {
-		resp.Msg = msg
-	} else {
-		resp.Msg = "ok"
-	}
+
+	resp.Msg = errors.Msg[code]
 
 	ctx.JSON(http.StatusOK, resp)
 }
