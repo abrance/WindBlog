@@ -108,12 +108,13 @@ func AddHandler(ctx *gin.Context) {
 		return
 	}
 	logger.Info("req: %v", req)
-	http.Responses(ctx, errors.OK, nil)
+	ctx.JSON(errors.OK, nil)
 }
 
+// UploadHandler
+// curl -X POST "http://localhost:5000/api/doc/v1/upload" -F "doc=@test"
+// 上传文件
 func UploadHandler(ctx *gin.Context) {
-	// curl 组织该 post 请求
-	// curl http://localhost:5000/api/doc/v1/list -v
 	_file, err := ctx.FormFile("doc")
 	if err != nil {
 		logger.Error(errors.ValidationException, err)
@@ -130,7 +131,7 @@ func UploadHandler(ctx *gin.Context) {
 		logger.Error(err)
 		return
 	}
-	http.Responses(ctx, errors.OK, nil)
+	ctx.JSON(errors.OK, nil)
 }
 
 func UpdateMetaHandler(ctx *gin.Context) {
