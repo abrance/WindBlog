@@ -5,30 +5,52 @@ import (
 	"github.com/WindBlog/util/http"
 	"github.com/WindBlog/util/storage/file"
 	"github.com/WindBlog/util/storage/json_storage"
+	"github.com/WindBlog/util/storage/sqlite"
+	"github.com/WindBlog/util/storage/sqlite/table"
 	"github.com/coreos/etcd/pkg/fileutil"
 	"github.com/gin-gonic/gin"
 	"github.com/wonderivan/logger"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
 
 func GetHandler(ctx *gin.Context) {
+	// curl 组织该 get 请求
+	// curl http://localhost:5000/api/doc/v1/get/1 -v
 	id := ctx.Param("id")
-	f, err := json_storage.GetFileTable().Get(id)
+
+	_id, err := strconv.Atoi(id)
+
+	_file := table.File{}
+	f := sqlite.GetDB().First(&_file, uint(_id))
+
 	if err != nil {
 		logger.Error(err)
 	}
+	if f.Error != nil {
+		logger.Error(f.Error)
+	}
 	//ctx.File()
-	ctx.JSON(errors.OK, f)
+	ctx.JSON(errors.OK, _file)
 }
 
 func ListHandler(ctx *gin.Context) {
-	f, err := json_storage.GetFileTable().List(nil)
-	if err != nil {
-		logger.Error(err)
+
+	// curl 组织该 get 请求
+	// curl http://localhost:5000/api/doc/v1/list -v
+	var fileLs []table.File
+	db := sqlite.GetDB().Find(&fileLs)
+	if db.Error != nil {
+		logger.Error(db.Error)
 	}
-	http.Responses(ctx, errors.OK, f)
+
+	//f, err := json_storage.GetFileTable().List(nil)
+	//if err != nil {
+	//	logger.Error(err)
+	//}
+	ctx.JSON(errors.OK, fileLs)
 }
 
 func UrlHandler(ctx *gin.Context) {
@@ -39,30 +61,50 @@ func UrlHandler(ctx *gin.Context) {
 		realPath := file.GetRealPath(filePath)
 		fileutil.Exist(realPath)
 		ctx.File(realPath)
+		ctx.JSON(errors.OK, "")
 	} else {
-		http.Responses(ctx, errors.FileNotExistError, nil)
+		ctx.JSON(errors.FileNotExistError, "")
 	}
 }
 
+// AddHandler
+// curl -X POST "http://localhost:5000/api/doc/v1/add" -d '{"name":"test", "url":"file://test.txt", "is_archive":false, "archive_id":""}'
+// 新增文件上传
 func AddHandler(ctx *gin.Context) {
+	//req := AddFileRequest{}
+	//err := ctx.ShouldBindJSON(&req)
+	//if err != nil {
+	//	logger.Error(errors.ValidationException)
+	//	return
+	//}
+	//f := &json_storage.File{
+	//	Id:         "1",
+	//	Name:       req.Name,
+	//	Url:        req.Url,
+	//	IsArchive:  req.IsArchive,
+	//	ArchiveId:  "",
+	//	CreateTime: time.Now().Unix(),
+	//	UpdateTime: time.Now().Unix(),
+	//}
+	//err = json_storage.GetFileTable().Insert(f)
+
 	req := AddFileRequest{}
 	err := ctx.ShouldBindJSON(&req)
 	if err != nil {
 		logger.Error(errors.ValidationException)
 		return
 	}
-	f := &json_storage.File{
-		Id:         "1",
+	f := &table.File{
 		Name:       req.Name,
 		Url:        req.Url,
 		IsArchive:  req.IsArchive,
-		ArchiveId:  "",
+		ArchiveId:  req.ArchiveId,
 		CreateTime: time.Now().Unix(),
 		UpdateTime: time.Now().Unix(),
 	}
-	err = json_storage.GetFileTable().Insert(f)
-	if err != nil {
-		logger.Error(err)
+	db := sqlite.GetDB().Create(f)
+	if db.Error != nil {
+		logger.Error(db.Error)
 		return
 	}
 	logger.Info("req: %v", req)
