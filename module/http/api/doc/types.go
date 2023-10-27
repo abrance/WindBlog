@@ -2,13 +2,13 @@ package doc
 
 type AddFileRequest struct {
 	Name      string `json:"name" binding:"required"`
-	Url       string `json:"url"`        // 地址, file://  表示本地
-	IsArchive bool   `json:"is_archive"` // 是否已归档
-	ArchiveId string `json:"archive_id"` //归档id
+	Url       string `json:"url" binding:"required"`        // 地址, file://  表示本地
+	IsArchive bool   `json:"is_archive" binding:"required"` // 是否已归档
+	ArchiveId string `json:"archive_id" binding:"required"` //归档id
 }
 
 type UpdateFileMetaRequest struct {
-	Name       string `json:"name" binding:"required"`
+	Name       string `json:"name"`
 	Url        string `json:"url"`        // 地址, file://  表示本地
 	IsArchive  bool   `json:"is_archive"` // 是否已归档
 	ArchiveId  string `json:"archive_id"` //归档id
