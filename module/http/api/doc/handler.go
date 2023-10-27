@@ -4,7 +4,6 @@ import (
 	"github.com/WindBlog/util/errors"
 	"github.com/WindBlog/util/http"
 	"github.com/WindBlog/util/storage/file"
-	"github.com/WindBlog/util/storage/json_storage"
 	"github.com/WindBlog/util/storage/sqlite"
 	"github.com/WindBlog/util/storage/sqlite/table"
 	"github.com/coreos/etcd/pkg/fileutil"
@@ -159,21 +158,6 @@ func UpdateMetaHandler(ctx *gin.Context) {
 		http.Responses(ctx, errors.ValidationException, nil)
 		return
 	}
-	//oldFile, err := json_storage.GetFileTable().Get(id)
-	//if err != nil {
-	//	logger.Error(errors.FileNotExistError)
-	//	return
-	//}
-	//f := &json_storage.File{
-	//	Id:         id,
-	//	Name:       req.Name,
-	//	Url:        req.Url,
-	//	IsArchive:  req.IsArchive,
-	//	ArchiveId:  req.ArchiveId,
-	//	CreateTime: oldFile.CreateTime,
-	//	UpdateTime: req.UpdateTime,
-	//}
-	//err = json_storage.GetFileTable().Update(id, f)
 	f := &table.File{}
 	db := sqlite.GetDB().First(f, id)
 	if db.Error != nil {
@@ -207,16 +191,22 @@ func UpdateMetaHandler(ctx *gin.Context) {
 // UpdateContentHandler
 // curl -X PATCH "http://localhost:5000/api/doc/v1/update/content/1" -d '{"name":"test"}'
 // 更新文件内容
+// TODO
 func UpdateContentHandler(ctx *gin.Context) {
 	// curl -X PATCH "http://localhost:5000/api/doc/v1/update/content/152227692589057" -d '{"name":"test"}'
 	http.Responses(ctx, errors.ApiTodoException, "")
 }
 
+// RemoveHandler
+// curl -X DELETE "http://localhost:5000/api/doc/v1/remove/1"
+// 删除文件元信息
 func RemoveHandler(ctx *gin.Context) {
 	id := ctx.Param("id")
-	err := json_storage.GetFileTable().Delete(id)
-	if err != nil {
-		logger.Error(err)
+	//err := json_storage.GetFileTable().Delete(id)
+	f := &table.File{}
+	db := sqlite.GetDB().Delete(f, id)
+	if db.Error != nil {
+		logger.Error(db.Error)
 		http.Responses(ctx, errors.FileDeleteError, nil)
 		return
 	}
