@@ -23,17 +23,21 @@ func GetHandler(ctx *gin.Context) {
 
 	_id, err := strconv.Atoi(id)
 
+	if err != nil {
+		logger.Error(err)
+		http.Responses(ctx, errors.ValidationException, nil)
+		return
+	}
 	_file := table.File{}
 	f := sqlite.GetDB().First(&_file, uint(_id))
 
-	if err != nil {
-		logger.Error(err)
-	}
 	if f.Error != nil {
 		logger.Error(f.Error)
+		http.Responses(ctx, errors.HandleInternalException, nil)
+		return
 	}
 	//ctx.File()
-	ctx.JSON(errors.OK, _file)
+	http.Responses(ctx, errors.OK, _file)
 }
 
 func ListHandler(ctx *gin.Context) {
@@ -44,13 +48,15 @@ func ListHandler(ctx *gin.Context) {
 	db := sqlite.GetDB().Find(&fileLs)
 	if db.Error != nil {
 		logger.Error(db.Error)
+		http.Responses(ctx, errors.HandleInternalException, nil)
+		return
 	}
 
 	//f, err := json_storage.GetFileTable().List(nil)
 	//if err != nil {
 	//	logger.Error(err)
 	//}
-	ctx.JSON(errors.OK, fileLs)
+	http.Responses(ctx, errors.OK, fileLs)
 }
 
 func UrlHandler(ctx *gin.Context) {
@@ -61,9 +67,9 @@ func UrlHandler(ctx *gin.Context) {
 		realPath := file.GetRealPath(filePath)
 		fileutil.Exist(realPath)
 		ctx.File(realPath)
-		ctx.JSON(errors.OK, "")
+		http.Responses(ctx, errors.OK, nil)
 	} else {
-		ctx.JSON(errors.FileNotExistError, "")
+		http.Responses(ctx, errors.FileNotExistError, nil)
 	}
 }
 
@@ -92,6 +98,7 @@ func AddHandler(ctx *gin.Context) {
 	err := ctx.ShouldBindJSON(&req)
 	if err != nil {
 		logger.Error(errors.ValidationException)
+		http.Responses(ctx, errors.ValidationException, nil)
 		return
 	}
 	f := &table.File{
@@ -105,10 +112,11 @@ func AddHandler(ctx *gin.Context) {
 	db := sqlite.GetDB().Create(f)
 	if db.Error != nil {
 		logger.Error(db.Error)
+		http.Responses(ctx, errors.HandleInternalException, nil)
 		return
 	}
 	logger.Info("req: %v", req)
-	ctx.JSON(errors.OK, nil)
+	http.Responses(ctx, errors.OK, nil)
 }
 
 // UploadHandler
@@ -118,22 +126,28 @@ func UploadHandler(ctx *gin.Context) {
 	_file, err := ctx.FormFile("doc")
 	if err != nil {
 		logger.Error(errors.ValidationException, err)
+		http.Responses(ctx, errors.ValidationException, nil)
 		return
 	}
 	// 限制文件大小
 	if _file.Size > 1024*1024*10 {
 		logger.Error(errors.ValidationException)
+		http.Responses(ctx, errors.ValidationException, nil)
 		return
 	}
 	// 将文件保存到本地
 	err = ctx.SaveUploadedFile(_file, file.GetRealPath(_file.Filename))
 	if err != nil {
 		logger.Error(err)
+		http.Responses(ctx, errors.HandleInternalException, nil)
 		return
 	}
-	ctx.JSON(errors.OK, nil)
+	http.Responses(ctx, errors.OK, nil)
 }
 
+// UpdateMetaHandler
+// curl -X PUT "http://localhost:5000/api/doc/v1/update_meta/?id=152227692589057" -d '{"name":"test"}'
+// 更新文件元信息
 func UpdateMetaHandler(ctx *gin.Context) {
 	// curl -X PUT "http://localhost:5000/api/doc/v1/update_meta/?id=152227692589057" -d '{"name":"test"}'
 	id := ctx.Param("id")
