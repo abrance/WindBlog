@@ -146,10 +146,9 @@ func UploadHandler(ctx *gin.Context) {
 }
 
 // UpdateMetaHandler
-// curl -X PUT "http://localhost:5000/api/doc/v1/update_meta/?id=152227692589057" -d '{"name":"test"}'
+// curl -X PUT "http://localhost:5000/api/doc/v1/update/meta/1" -d '{"name":"test", "url":"file://test.txt", "is_archive":false, "archive_id":""}'
 // 更新文件元信息
 func UpdateMetaHandler(ctx *gin.Context) {
-	// curl -X PUT "http://localhost:5000/api/doc/v1/update_meta/?id=152227692589057" -d '{"name":"test"}'
 	id := ctx.Param("id")
 	req := &UpdateFileMetaRequest{
 		UpdateTime: time.Now().Unix(),
@@ -160,24 +159,54 @@ func UpdateMetaHandler(ctx *gin.Context) {
 		http.Responses(ctx, errors.ValidationException, nil)
 		return
 	}
-	oldFile, err := json_storage.GetFileTable().Get(id)
-	if err != nil {
-		logger.Error(errors.FileNotExistError)
+	//oldFile, err := json_storage.GetFileTable().Get(id)
+	//if err != nil {
+	//	logger.Error(errors.FileNotExistError)
+	//	return
+	//}
+	//f := &json_storage.File{
+	//	Id:         id,
+	//	Name:       req.Name,
+	//	Url:        req.Url,
+	//	IsArchive:  req.IsArchive,
+	//	ArchiveId:  req.ArchiveId,
+	//	CreateTime: oldFile.CreateTime,
+	//	UpdateTime: req.UpdateTime,
+	//}
+	//err = json_storage.GetFileTable().Update(id, f)
+	f := &table.File{}
+	db := sqlite.GetDB().First(f, id)
+	if db.Error != nil {
+		logger.Error(db.Error)
+		http.Responses(ctx, errors.HandleInternalException, nil)
 		return
 	}
-	f := &json_storage.File{
-		Id:         id,
-		Name:       req.Name,
-		Url:        req.Url,
-		IsArchive:  req.IsArchive,
-		ArchiveId:  req.ArchiveId,
-		CreateTime: oldFile.CreateTime,
-		UpdateTime: req.UpdateTime,
+
+	if req.Name != "" {
+		f.Name = req.Name
 	}
-	err = json_storage.GetFileTable().Update(id, f)
+	if req.Url != "" {
+		f.Url = req.Url
+	}
+	if req.IsArchive != false {
+		f.IsArchive = req.IsArchive
+	}
+	if req.ArchiveId != "" {
+		f.ArchiveId = req.ArchiveId
+	}
+
+	db = sqlite.GetDB().Save(f)
+	if db.Error != nil {
+		logger.Error(db.Error)
+		http.Responses(ctx, errors.HandleInternalException, nil)
+		return
+	}
 	http.Responses(ctx, errors.OK, nil)
 }
 
+// UpdateContentHandler
+// curl -X PATCH "http://localhost:5000/api/doc/v1/update/content/1" -d '{"name":"test"}'
+// 更新文件内容
 func UpdateContentHandler(ctx *gin.Context) {
 	// curl -X PATCH "http://localhost:5000/api/doc/v1/update/content/152227692589057" -d '{"name":"test"}'
 	http.Responses(ctx, errors.ApiTodoException, "")
