@@ -2,10 +2,8 @@ package table
 
 type Tag struct {
 	ID         uint   `gorm:"primaryKey"`
-	Name       string // 书名
-	Url        string // 地址, file://  表示本地
-	IsArchive  bool   // 是否已归档
-	ArchiveId  string //归档id
+	Name       string // tag name
+	IsDir      bool   // 是否是目录
+	Nice       uint
 	CreateTime int64
-	UpdateTime int64
 }

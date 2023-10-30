@@ -20,16 +20,11 @@ func SetTagRouterGroup(router *gin.RouterGroup) {
 
 		// tag 列表获取
 		// tag 详情获取
-		v1TagRouterGroup.GET("/get/:id")
-		v1TagRouterGroup.GET("/list")
-		v1TagRouterGroup.GET("/url")
+		v1TagRouterGroup.GET("/get/:id", GetHandler)
+		v1TagRouterGroup.GET("/list", ListHandler)
 
-		v1TagRouterGroup.POST("/add")
-		v1TagRouterGroup.POST("/upload")
-
-		v1TagRouterGroup.PUT("/update/meta/:id")
-		v1TagRouterGroup.PATCH("/update/content/:id")
-		v1TagRouterGroup.DELETE("/remove/:id")
-		v1TagRouterGroup.DELETE("/remove_url/")
+		v1TagRouterGroup.POST("/add", AddHandler)
+		v1TagRouterGroup.PUT("/update/:id", UpdateHandler)
+		v1TagRouterGroup.DELETE("/remove/:id", RemoveHandler)
 	}
 }
