@@ -43,11 +43,12 @@ func ListHandler(ctx *gin.Context) {
 }
 
 // AddHandler 添加 tag
-// curl http://localhost:5000/api/tag/v1/add -d '{"name":"test_tag", "is_dir": false}'   -v
+// curl -X POST http://localhost:5000/api/tag/v1/add -d '{"name":"test_tag", "isDir": false, "nice": 1}'   -v
 func AddHandler(ctx *gin.Context) {
 	a := AddRequest{}
 	err := ctx.ShouldBindJSON(&a)
 	if err != nil {
+		logger.Error(err)
 		http.Responses(ctx, errors.ValidationException, nil)
 		return
 	}
@@ -59,6 +60,7 @@ func AddHandler(ctx *gin.Context) {
 	}
 	db := sqlite.GetDB().Create(tag)
 	if db.Error != nil {
+		logger.Error(db.Error)
 		http.Responses(ctx, errors.HandleInternalException, nil)
 		return
 	}
